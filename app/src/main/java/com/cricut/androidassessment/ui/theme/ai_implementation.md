@@ -1,7 +1,7 @@
-# AI Implementation
-* Generated the initial screen
+# AI Boilerplate Postmortem
+* Generated the initial AssessmentScreen.kt file
 * generated the QuizQuestion interface and four classes implementing it
-* implemented Hilt database that returns a list of quizzes
-* implemented AssessmentViewModel
-* implemented initial AssessmentScreen
-* started a test suite for AssessmentViewModelTest
+* Implemented Hilt database that returns a list of quizzes
+* Implemented AssessmentViewModel
+* Implemented initial AssessmentScreen
+* Started a test suite for AssessmentViewModelTest
