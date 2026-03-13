@@ -87,8 +87,8 @@ class QuizScreenViewModelTest {
         viewModel.uiState(1)
         advanceUntilIdle()
 
-        viewModel.navigateNext() // Go to index 1
-        viewModel.navigateNext() // Finish
+        viewModel.navigateNext()
+        viewModel.navigateNext()
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState(1).isFinishedFlow.value)

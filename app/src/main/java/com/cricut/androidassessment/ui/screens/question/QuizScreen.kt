@@ -145,7 +145,6 @@ private fun QuestionContent(
         )
 
         else -> {
-            // Optional: Implement other question types or a placeholder
             Text(stringResource(R.string.question_type_not_implemented))
         }
     }
@@ -236,7 +235,7 @@ private fun NavigationButtons(
                 Text(stringResource(R.string.back))
             }
         } else {
-            Spacer(modifier = Modifier.width(1.dp)) // Maintain space
+            Spacer(modifier = Modifier.width(1.dp))
         }
 
         Button(
