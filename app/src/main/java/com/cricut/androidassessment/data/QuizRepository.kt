@@ -1,6 +1,8 @@
 package com.cricut.androidassessment.data
 
 import com.cricut.androidassessment.model.MultipleChoiceQuestion
+import com.cricut.androidassessment.model.MultipleSelectionQuestion
+import com.cricut.androidassessment.model.OpenEndedQuestion
 import com.cricut.androidassessment.model.Quiz
 import com.cricut.androidassessment.model.QuizQuestion
 import com.cricut.androidassessment.model.TrueFalseQuestion
@@ -22,8 +24,22 @@ class QuizRepository @Inject constructor() {
         options = listOf("Java", "Kotlin", "Swift", "Dart"),
         correctAnswerIndex = 1
     )
+
+    private val questionThree = MultipleSelectionQuestion(
+        id = 3,
+        questionText = "Which tools can be used to store local data in Android?",
+        options = listOf("Room", "DataStore", "Retrofit", "SharedPreferences"),
+        correctAnswerIndices = setOf(0, 1, 3)
+    )
+
+    private val questionFour = OpenEndedQuestion(
+        id = 4,
+        questionText = "What is Jetpack Compose used for in Android development?",
+        correctAnswer = "To build declarative user interfaces in Android"
+    )
+
     private val questions: List<QuizQuestion> = listOf(
-        questionOne, questionTwo
+        questionOne, questionTwo, questionThree, questionFour
     )
 
     private val quiz = Quiz(

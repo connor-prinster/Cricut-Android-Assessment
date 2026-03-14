@@ -83,9 +83,14 @@ class QuizScreenViewModel @Inject constructor(
                 currentQuestionFlow.value = currentQuestion
                 isFirstQuestionFlow.value = index == 0
                 isLastQuestionFlow.value = (index == questions.size - 1) && questions.isNotEmpty()
-                isNextEnabledFlow.value =
-                    currentQuestion != null &&
-                            answers.containsKey(currentQuestion.id)
+
+                val answer = if (currentQuestion != null) answers[currentQuestion.id] else null
+                isNextEnabledFlow.value = when (answer) {
+                    null -> false
+                    is String -> answer.isNotBlank()
+                    is Collection<*> -> answer.isNotEmpty()
+                    else -> true
+                }
             }
         }
     }
