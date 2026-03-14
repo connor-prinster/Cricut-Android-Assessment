@@ -25,12 +25,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.cricut.androidassessment.R
 import com.cricut.androidassessment.model.MultipleChoiceQuestion
+import com.cricut.androidassessment.model.MultipleSelectionQuestion
+import com.cricut.androidassessment.model.OpenEndedQuestion
 import com.cricut.androidassessment.model.Quiz
 import com.cricut.androidassessment.model.QuizQuestion
 import com.cricut.androidassessment.model.TrueFalseQuestion
 import com.cricut.androidassessment.ui.components.MultipleChoiceContent
+import com.cricut.androidassessment.ui.components.MultipleSelectionContent
+import com.cricut.androidassessment.ui.components.OpenEndedContent
 import com.cricut.androidassessment.ui.components.PaddedScaffold
 import com.cricut.androidassessment.ui.components.TrueFalseContent
+import com.cricut.androidassessment.ui.theme.AndroidAssessmentTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
@@ -40,17 +45,33 @@ fun QuizScreen(
 ) {
     // use remember so we don't recreate a uiState over and over again if no quizId changes
     val uiState = remember(quizId) { viewModel.uiState(quizId) }
+    val nullableQuiz by uiState.quizFlow.collectAsState()
+    // as it's delegated, quiz can be null
+    val quiz = nullableQuiz
+    val isFirst by uiState.isFirstQuestionFlow.collectAsState()
+    val isLast by uiState.isLastQuestionFlow.collectAsState()
 
-    PaddedScaffold {
-        QuizScreenContent(uiState = uiState)
+    val nextEnabled by uiState.isNextEnabledFlow.collectAsState()
+
+    PaddedScaffold(
+        bottomBar = {
+            if (quiz != null) {
+                NavigationButtons(
+                    isFirst = isFirst,
+                    isLast = isLast,
+                    onNext = { uiState.navigateNext() },
+                    onBack = { uiState.navigateBack() },
+                    nextEnabled = nextEnabled
+                )
+            }
+        }
+    ) {
+        QuizScreenContent(uiState = uiState, quiz = quiz)
     }
 }
 
 @Composable
-private fun QuizScreenContent(uiState: QuizUiState) {
-    val nullableQuiz by uiState.quizFlow.collectAsState()
-    // as it's delegated, quiz can be null
-    val quiz = nullableQuiz
+private fun QuizScreenContent(uiState: QuizUiState, quiz: Quiz?) {
     if (quiz != null) {
         val isFinished by uiState.isFinishedFlow.collectAsState()
         Column(
@@ -83,11 +104,6 @@ private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
     val answers by uiState.answersFlow.collectAsState()
     val selectedAnswer = answers[currentQuestion.id]
 
-    val isFirst by uiState.isFirstQuestionFlow.collectAsState()
-    val isLast by uiState.isLastQuestionFlow.collectAsState()
-
-    val nextEnabled by uiState.isNextEnabledFlow.collectAsState()
-
     Column(modifier = Modifier.fillMaxSize()) {
         QuestionHeader(question = currentQuestion)
         Spacer(modifier = Modifier.height(24.dp))
@@ -95,14 +111,6 @@ private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
             question = currentQuestion,
             selectedAnswer = selectedAnswer,
             onAnswerSelected = { uiState.onAnswerSelected(currentQuestion.id, it) }
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        NavigationButtons(
-            isFirst = isFirst,
-            isLast = isLast,
-            onNext = { uiState.navigateNext() },
-            onBack = { uiState.navigateBack() },
-            nextEnabled = nextEnabled
         )
     }
 }
@@ -152,9 +160,16 @@ private fun QuestionContent(
             onAnswerSelected = onAnswerSelected
         )
 
-        else -> {
-            Text(stringResource(R.string.question_type_not_implemented))
-        }
+        is MultipleSelectionQuestion -> MultipleSelectionContent(
+            question = question,
+            selectedAnswerIndices = (selectedAnswer as? Set<*>)?.filterIsInstance<Int>()?.toSet(),
+            onAnswerSelected = onAnswerSelected
+        )
+
+        is OpenEndedQuestion -> OpenEndedContent(
+            selectedAnswer = selectedAnswer as? String,
+            onAnswerSelected = onAnswerSelected
+        )
     }
 }
 
@@ -167,7 +182,9 @@ private fun NavigationButtons(
     nextEnabled: Boolean
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 30.dp, horizontal = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         if (!isFirst) {
@@ -208,19 +225,20 @@ private fun FinishScreen(onRestart: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun PreviewQuizScreenEmpty() {
-    MaterialTheme {
-        QuizScreenContent(uiState = QuizUiState.EMPTY)
+    AndroidAssessmentTheme {
+        QuizScreenContent(uiState = QuizUiState.EMPTY, quiz = null)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewQuizScreenPopulated() {
-    MaterialTheme {
+    AndroidAssessmentTheme {
         QuizScreenContent(
             uiState = QuizUiState.EMPTY.copy(
                 quizFlow = MutableStateFlow(Quiz.generateTest())
-            )
+            ),
+            quiz = Quiz.generateTest()
         )
     }
 }

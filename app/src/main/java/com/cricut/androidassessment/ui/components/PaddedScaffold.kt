@@ -10,10 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun PaddedScaffold(content: @Composable () -> Unit) {
+fun PaddedScaffold(bottomBar: @Composable () -> Unit = {}, content: @Composable () -> Unit) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.safeDrawing
+        contentWindowInsets = WindowInsets.safeDrawing,
+        bottomBar = bottomBar
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             content()

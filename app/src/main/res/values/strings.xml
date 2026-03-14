@@ -13,4 +13,6 @@
     <string name="navigate_to_quiz">Navigate to Quiz</string>
     <string name="no_quizzes_found">No Quizzes Found!</string>
     <string name="more_items_available">More items available</string>
+    <string name="open_ended_hint">Type your answer here</string>
+    <string name="open_ended_label">Answer</string>
 </resources>
