@@ -1,97 +1,115 @@
 package com.cricut.androidassessment.ui.screens.quiz
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cricut.androidassessment.R
 import com.cricut.androidassessment.data.QuizRepository
 import com.cricut.androidassessment.ext.LOGGING_TAG
 import com.cricut.androidassessment.model.Quiz
 import com.cricut.androidassessment.model.QuizQuestion
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class QuizUiState(
-    val quizFlow: StateFlow<Quiz?>,
-    val currentQuestionIndexFlow: StateFlow<Int>,
-    val answersFlow: StateFlow<Map<Int, Any?>>,
-    val isFinishedFlow: StateFlow<Boolean>,
-    val currentQuestionFlow: StateFlow<QuizQuestion?>,
-    val isFirstQuestionFlow: StateFlow<Boolean>,
-    val isLastQuestionFlow: StateFlow<Boolean>,
-    val isNextEnabledFlow: StateFlow<Boolean>,
-
-    val onAnswerSelected: (Int, Any?) -> Unit,
-    val navigateNext: () -> Unit,
-    val restartQuiz: () -> Unit,
-    val navigateBack: () -> Unit
+    val quiz: Quiz? = null,
+    val currentQuestionIndex: Int = 0,
+    val answers: Map<Int, Any?> = emptyMap(),
+    val isFinished: Boolean = false,
+    val isLoading: Boolean = false,
+    val error: String? = null,
 ) {
-    companion object {
-        val EMPTY = QuizUiState(
-            quizFlow = MutableStateFlow(null),
-            currentQuestionIndexFlow = MutableStateFlow(0),
-            answersFlow = MutableStateFlow(mapOf()),
-            isFinishedFlow = MutableStateFlow(false),
-            currentQuestionFlow = MutableStateFlow(null),
-            isFirstQuestionFlow = MutableStateFlow(true),
-            isLastQuestionFlow = MutableStateFlow(false),
-            isNextEnabledFlow = MutableStateFlow(false),
+    val currentQuestion: QuizQuestion?
+        get() = quiz?.questions?.getOrNull(currentQuestionIndex)
 
-            onAnswerSelected = { _, _ -> },
-            navigateNext = {},
-            restartQuiz = {},
-            navigateBack = {}
-        )
-    }
+    val isFirstQuestion: Boolean
+        get() = currentQuestionIndex == 0
+
+    val isLastQuestion: Boolean
+        get() = quiz?.questions?.let { currentQuestionIndex == it.size - 1 } ?: false
+
+    val isNextEnabled: Boolean
+        get() {
+            val question = currentQuestion ?: return false
+            return when (val answer = answers[question.id]) {
+                null -> false
+                is String -> answer.isNotBlank()
+                is Collection<*> -> answer.isNotEmpty()
+                else -> true
+            }
+        }
 }
-
 
 @HiltViewModel
 class QuizScreenViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val quizRepository: QuizRepository
 ) : ViewModel() {
-    private val quizIdFlow: MutableStateFlow<Int?> = MutableStateFlow(null)
-    private val quizFlow: MutableStateFlow<Quiz?> = MutableStateFlow(null)
-    private val currentQuestionIndexFlow: MutableStateFlow<Int> = MutableStateFlow(0)
-    private val answersFlow: MutableStateFlow<Map<Int, Any?>> = MutableStateFlow(emptyMap())
-    private val isFinishedFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    private val currentQuestionFlow: MutableStateFlow<QuizQuestion?> = MutableStateFlow(null)
-    private val isFirstQuestionFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    private val isLastQuestionFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    private val isNextEnabledFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val quizIdFlow = MutableStateFlow<Int?>(null)
+    private val quizFlow = MutableStateFlow<Quiz?>(null)
+    private val currentQuestionIndexFlow = MutableStateFlow(0)
+    private val answersFlow = MutableStateFlow<Map<Int, Any?>>(emptyMap())
+    private val isFinishedFlow = MutableStateFlow(false)
+    private val isLoadingFlow = MutableStateFlow(false)
+    private val errorFlow = MutableStateFlow<String?>(null)
 
+    val uiState: StateFlow<QuizUiState> = combine(
+        quizFlow,
+        currentQuestionIndexFlow,
+        answersFlow,
+        isFinishedFlow,
+        isLoadingFlow,
+        errorFlow
+    ) { args: Array<*> ->
+        QuizUiState(
+            quiz = args[0] as? Quiz,
+            currentQuestionIndex = args[1] as Int,
+            answers = args[2] as Map<Int, Any?>,
+            isFinished = args[3] as Boolean,
+            isLoading = args[4] as Boolean,
+            error = args[5] as? String
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = QuizUiState(isLoading = true)
+    )
 
     init {
         viewModelScope.launch {
             quizIdFlow.collect { quizId ->
                 if (quizId != null) {
-                    quizFlow.value = quizRepository.getQuizById(quizId)
+                    isLoadingFlow.value = true
+                    errorFlow.value = null
+                    try {
+                        val result = quizRepository.getQuizById(quizId)
+                        if (result != null) {
+                            quizFlow.value = result
+                        } else {
+                            errorFlow.value = context.getString(R.string.quiz_not_found)
+                        }
+                    } catch (e: Exception) {
+                        errorFlow.value = e.message ?: context.getString(R.string.unknown_error_occurred)
+                    } finally {
+                        isLoadingFlow.value = false
+                    }
                 }
             }
         }
+    }
 
-        viewModelScope.launch {
-            combine(quizFlow, currentQuestionIndexFlow, answersFlow) { quiz, index, answers ->
-                Triple(quiz, index, answers)
-            }.collect { (quiz, index, answers) ->
-                val questions = quiz?.questions ?: emptyList()
-                val currentQuestion = questions.getOrNull(index)
-
-                currentQuestionFlow.value = currentQuestion
-                isFirstQuestionFlow.value = index == 0
-                isLastQuestionFlow.value = (index == questions.size - 1) && questions.isNotEmpty()
-
-                val answer = if (currentQuestion != null) answers[currentQuestion.id] else null
-                isNextEnabledFlow.value = when (answer) {
-                    null -> false
-                    is String -> answer.isNotBlank()
-                    is Collection<*> -> answer.isNotEmpty()
-                    else -> true
-                }
-            }
+    fun loadQuiz(quizId: Int?) {
+        if (quizIdFlow.value != quizId) {
+            restartQuiz()
+            quizIdFlow.value = quizId
         }
     }
 
@@ -100,23 +118,11 @@ class QuizScreenViewModel @Inject constructor(
             Log.e(LOGGING_TAG, "Answer cannot be null")
             return
         }
-
         answersFlow.value += (questionId to answer)
     }
 
     fun navigateNext() {
-        val quiz = quizFlow.value
-        val questions = quiz?.questions
-
-        if (quiz == null) {
-            Log.e(LOGGING_TAG, "navigateNext is called with null quiz")
-            return
-        }
-        if (questions.isNullOrEmpty()) {
-            Log.e(LOGGING_TAG, "navigateNext is called with empty questions")
-            return
-        }
-
+        val questions = quizFlow.value?.questions ?: return
         val lastIndex = questions.size - 1
         val currentIndex = currentQuestionIndexFlow.value
 
@@ -124,8 +130,6 @@ class QuizScreenViewModel @Inject constructor(
             currentQuestionIndexFlow.value = currentIndex + 1
         } else if (currentIndex == lastIndex) {
             isFinishedFlow.value = true
-        } else {
-            Log.e(LOGGING_TAG, "Invalid current question index: $currentIndex")
         }
     }
 
@@ -139,30 +143,5 @@ class QuizScreenViewModel @Inject constructor(
         if (currentQuestionIndexFlow.value > 0) {
             currentQuestionIndexFlow.value--
         }
-    }
-
-    fun uiState(questionId: Int?): QuizUiState {
-        val previousQuizId = quizIdFlow.value
-        if (previousQuizId != questionId) {
-            // If a new quizId is passed in, reset the state. As there isn't a key in the ViewModel creation,
-            // there is a chance that the ViewModel might be reused for a different quiz.
-            restartQuiz()
-            quizIdFlow.value = questionId
-        }
-
-        return QuizUiState(
-            quizFlow = quizFlow,
-            currentQuestionIndexFlow = currentQuestionIndexFlow,
-            answersFlow = answersFlow,
-            isFinishedFlow = isFinishedFlow,
-            currentQuestionFlow = currentQuestionFlow,
-            isFirstQuestionFlow = isFirstQuestionFlow,
-            isLastQuestionFlow = isLastQuestionFlow,
-            isNextEnabledFlow = isNextEnabledFlow,
-            onAnswerSelected = ::onAnswerSelected,
-            navigateNext = ::navigateNext,
-            restartQuiz = ::restartQuiz,
-            navigateBack = ::navigateBack
-        )
     }
 }

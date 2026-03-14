@@ -1,5 +1,6 @@
 package com.cricut.androidassessment.ui.screens.assessment
 
+import android.content.Context
 import com.cricut.androidassessment.data.QuizRepository
 import com.cricut.androidassessment.model.Quiz
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +24,8 @@ import org.mockito.kotlin.whenever
 class AssessmentViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private val repository: QuizRepository = mock()
+    private val mockRepository: QuizRepository = mock()
+    private val mockContext: Context = mock()
     private lateinit var viewModel: AssessmentViewModel
 
     @Before
@@ -39,12 +41,12 @@ class AssessmentViewModelTest {
     @Test
     fun `init should fetch quizzes and update quizListFlow`() = runTest {
         val quizzes = listOf(Quiz(1, "Test Quiz", emptyList()))
-        whenever(repository.getQuizzes()).doReturn(flowOf(quizzes))
+        whenever(mockRepository.getQuizzes()).doReturn(flowOf(quizzes))
 
-        viewModel = AssessmentViewModel(repository)
+        viewModel = AssessmentViewModel(mockContext, mockRepository)
         advanceUntilIdle()
 
-        assertEquals(quizzes, viewModel.quizListFlow.value)
-        verify(repository).getQuizzes()
+        assertEquals(quizzes, viewModel.uiState.value.quizzes)
+        verify(mockRepository).getQuizzes()
     }
 }

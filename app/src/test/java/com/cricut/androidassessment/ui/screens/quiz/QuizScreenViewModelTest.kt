@@ -1,5 +1,6 @@
 package com.cricut.androidassessment.ui.screens.quiz
 
+import android.content.Context
 import com.cricut.androidassessment.data.QuizRepository
 import com.cricut.androidassessment.model.MultipleChoiceQuestion
 import com.cricut.androidassessment.model.Quiz
@@ -24,6 +25,7 @@ import org.mockito.kotlin.whenever
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizScreenViewModelTest {
     private val mockRepository: QuizRepository = mock()
+    private val mockContext: Context = mock()
     private lateinit var viewModel: QuizScreenViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -40,7 +42,7 @@ class QuizScreenViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         whenever(mockRepository.getQuizById(1)).doReturn(testQuiz)
-        viewModel = QuizScreenViewModel(mockRepository)
+        viewModel = QuizScreenViewModel(mockContext, mockRepository)
     }
 
     @After
@@ -49,63 +51,63 @@ class QuizScreenViewModelTest {
     }
 
     @Test
-    fun `uiState should set quizId and fetch quiz`() = runTest(testDispatcher) {
-        viewModel.uiState(1)
+    fun `loadQuiz should fetch quiz and update uiState`() = runTest(testDispatcher) {
+        viewModel.loadQuiz(1)
         advanceUntilIdle()
-        assertEquals(testQuiz, viewModel.uiState(1).quizFlow.value)
+        assertEquals(testQuiz, viewModel.uiState.value.quiz)
     }
 
     @Test
-    fun `onAnswerSelected should update answersFlow and isNextEnabledFlow`() =
+    fun `onAnswerSelected should update answers and isNextEnabled`() =
         runTest(testDispatcher) {
-            viewModel.uiState(1)
+            viewModel.loadQuiz(1)
             advanceUntilIdle()
 
             viewModel.onAnswerSelected(1, true)
             advanceUntilIdle()
 
-            assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
-            assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
+            assertEquals(true, viewModel.uiState.value.answers[1])
+            assertTrue(viewModel.uiState.value.isNextEnabled)
         }
 
     @Test
     fun `navigateNext should increment question index`() = runTest {
-        viewModel.uiState(1)
+        viewModel.loadQuiz(1)
         advanceUntilIdle()
 
         viewModel.navigateNext()
         advanceUntilIdle()
 
-        assertEquals(1, viewModel.uiState(1).currentQuestionIndexFlow.value)
-        assertFalse(viewModel.uiState(1).isFinishedFlow.value)
+        assertEquals(1, viewModel.uiState.value.currentQuestionIndex)
+        assertFalse(viewModel.uiState.value.isFinished)
     }
 
     @Test
     fun `navigateNext on last question should set isFinished`() = runTest {
-        viewModel.uiState(1)
+        viewModel.loadQuiz(1)
         advanceUntilIdle()
 
         viewModel.navigateNext()
         viewModel.navigateNext()
         advanceUntilIdle()
 
-        assertTrue(viewModel.uiState(1).isFinishedFlow.value)
+        assertTrue(viewModel.uiState.value.isFinished)
     }
 
     @Test
-    fun `isLastQuestionFlow should be true on last question`() = runTest {
-        viewModel.uiState(1)
+    fun `isLastQuestion should be true on last question`() = runTest {
+        viewModel.loadQuiz(1)
         advanceUntilIdle()
 
         viewModel.navigateNext()
         advanceUntilIdle()
 
-        assertTrue(viewModel.uiState(1).isLastQuestionFlow.value)
+        assertTrue(viewModel.uiState.value.isLastQuestion)
     }
 
     @Test
     fun `restartQuiz should reset state`() = runTest {
-        viewModel.uiState(1)
+        viewModel.loadQuiz(1)
         advanceUntilIdle()
 
         viewModel.onAnswerSelected(1, true)
@@ -113,9 +115,9 @@ class QuizScreenViewModelTest {
         viewModel.restartQuiz()
         advanceUntilIdle()
 
-        val uiState = viewModel.uiState(1)
-        assertEquals(0, uiState.currentQuestionIndexFlow.value)
-        assertTrue(uiState.answersFlow.value.isEmpty())
-        assertFalse(uiState.isFinishedFlow.value)
+        val uiState = viewModel.uiState.value
+        assertEquals(0, uiState.currentQuestionIndex)
+        assertTrue(uiState.answers.isEmpty())
+        assertFalse(uiState.isFinished)
     }
 }
