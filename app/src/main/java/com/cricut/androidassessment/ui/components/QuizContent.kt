@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -138,13 +139,13 @@ fun MultipleSelectionContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .selectable(
-                            selected = isSelected,
-                            onClick = {
-                                val newSelection = if (isSelected) {
-                                    selectedIndices - index
-                                } else {
+                        .toggleable(
+                            value = isSelected,
+                            onValueChange = { checked ->
+                                val newSelection = if (checked) {
                                     selectedIndices + index
+                                } else {
+                                    selectedIndices - index
                                 }
                                 onAnswerSelected(newSelection)
                             },
