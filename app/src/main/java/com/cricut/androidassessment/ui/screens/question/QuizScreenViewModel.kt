@@ -16,9 +16,9 @@ import javax.inject.Inject
 
 data class QuizUiState(
     val quizFlow: StateFlow<Quiz?>,
-    val currentQuestionIndexFlow: MutableStateFlow<Int>,
-    val answersFlow: MutableStateFlow<Map<Int, Any?>>,
-    val isFinishedFlow: MutableStateFlow<Boolean>,
+    val currentQuestionIndexFlow: StateFlow<Int>,
+    val answersFlow: StateFlow<Map<Int, Any?>>,
+    val isFinishedFlow: StateFlow<Boolean>,
     val currentQuestionFlow: StateFlow<QuizQuestion?>,
     val isFirstQuestionFlow: StateFlow<Boolean>,
     val isLastQuestionFlow: StateFlow<Boolean>,
