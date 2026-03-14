@@ -1,4 +1,4 @@
-package com.cricut.androidassessment.ui.screens.question
+package com.cricut.androidassessment.ui.screens.quiz
 
 import com.cricut.androidassessment.data.QuizRepository
 import com.cricut.androidassessment.model.MultipleChoiceQuestion

@@ -12,7 +12,7 @@ import androidx.navigation.navArgument
 import com.cricut.androidassessment.enums.NavigationConstants.NAV_ARG_QUIZ_ID
 import com.cricut.androidassessment.enums.Routes
 import com.cricut.androidassessment.ui.screens.assessment.AssessmentScreen
-import com.cricut.androidassessment.ui.screens.question.QuizScreen
+import com.cricut.androidassessment.ui.screens.quiz.QuizScreen
 
 @Composable
 fun MainNavHost(navController: NavHostController) {

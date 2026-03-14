@@ -1,4 +1,4 @@
-package com.cricut.androidassessment.ui.screens.question
+package com.cricut.androidassessment.ui.screens.quiz
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -24,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,6 +28,9 @@ import com.cricut.androidassessment.model.MultipleChoiceQuestion
 import com.cricut.androidassessment.model.Quiz
 import com.cricut.androidassessment.model.QuizQuestion
 import com.cricut.androidassessment.model.TrueFalseQuestion
+import com.cricut.androidassessment.ui.components.MultipleChoiceContent
+import com.cricut.androidassessment.ui.components.PaddedScaffold
+import com.cricut.androidassessment.ui.components.TrueFalseContent
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
@@ -42,10 +40,9 @@ fun QuizScreen(
 ) {
     // use remember so we don't recreate a uiState over and over again if no quizId changes
     val uiState = remember(quizId) { viewModel.uiState(quizId) }
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            QuizScreenContent(uiState = uiState)
-        }
+
+    PaddedScaffold {
+        QuizScreenContent(uiState = uiState)
     }
 }
 
@@ -157,74 +154,6 @@ private fun QuestionContent(
 
         else -> {
             Text(stringResource(R.string.question_type_not_implemented))
-        }
-    }
-}
-
-@Composable
-private fun TrueFalseContent(
-    selectedAnswer: Boolean?,
-    onAnswerSelected: (Boolean) -> Unit
-) {
-    Column(modifier = Modifier.selectableGroup()) {
-        listOf(true, false).forEach { answer ->
-            val label = stringResource(if (answer) R.string.true_label else R.string.false_label)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .selectable(
-                        selected = (selectedAnswer == answer),
-                        onClick = { onAnswerSelected(answer) },
-                        role = Role.RadioButton
-                    )
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = (selectedAnswer == answer),
-                    onClick = null // null because it's handled by Row selectable
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MultipleChoiceContent(
-    question: MultipleChoiceQuestion,
-    selectedAnswerIndex: Int?,
-    onAnswerSelected: (Int) -> Unit
-) {
-    Column(modifier = Modifier.selectableGroup()) {
-        question.options.forEachIndexed { index, option ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .selectable(
-                        selected = (selectedAnswerIndex == index),
-                        onClick = { onAnswerSelected(index) },
-                        role = Role.RadioButton
-                    )
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(
-                    selected = (selectedAnswerIndex == index),
-                    onClick = null
-                )
-                Text(
-                    text = option,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
         }
     }
 }
