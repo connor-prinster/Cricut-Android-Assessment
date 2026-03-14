@@ -9,11 +9,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.cricut.androidassessment.R
 import com.cricut.androidassessment.model.MultipleChoiceQuestion
 import com.cricut.androidassessment.model.MultipleSelectionQuestion
@@ -40,6 +46,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun QuizScreen(
+    navController: NavController,
     viewModel: QuizScreenViewModel = hiltViewModel(),
     quizId: Int?,
 ) {
@@ -64,6 +71,22 @@ fun QuizScreen(
                     onBack = { uiState.navigateBack() },
                     nextEnabled = nextEnabled
                 )
+            } else if (isFinished) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 30.dp, horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = { navController.popBackStack() }) {
+                        Text(stringResource(R.string.main_menu))
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(onClick = uiState.restartQuiz) {
+                        Text(stringResource(R.string.restart_quiz))
+                    }
+                }
             }
         }
     ) {
@@ -87,7 +110,7 @@ private fun QuizScreenContent(uiState: QuizUiState, quiz: Quiz?) {
                 modifier = Modifier.padding(bottom = 32.dp)
             )
             if (isFinished) {
-                FinishScreen { uiState.restartQuiz() }
+                FinishScreen(uiState)
             } else {
                 QuizInProgress(uiState = uiState, quiz = quiz)
             }
@@ -105,7 +128,15 @@ private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
     val answers by uiState.answersFlow.collectAsState()
     val selectedAnswer = answers[currentQuestion.id]
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    val scrollState = rememberScrollState()
+    LaunchedEffect(currentQuestion.id) {
+        scrollState.scrollTo(0)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
         QuestionHeader(question = currentQuestion)
         Spacer(modifier = Modifier.height(24.dp))
         QuestionContent(
@@ -147,28 +178,35 @@ private fun QuestionHeader(question: QuizQuestion) {
 private fun QuestionContent(
     question: QuizQuestion,
     selectedAnswer: Any?,
+    showAnswers: Boolean = false,
     onAnswerSelected: (Any) -> Unit
 ) {
     when (question) {
         is TrueFalseQuestion -> TrueFalseContent(
+            question = question,
             selectedAnswer = selectedAnswer as? Boolean,
+            showAnswers = showAnswers,
             onAnswerSelected = onAnswerSelected
         )
 
         is MultipleChoiceQuestion -> MultipleChoiceContent(
             question = question,
             selectedAnswerIndex = selectedAnswer as? Int,
+            showAnswers = showAnswers,
             onAnswerSelected = onAnswerSelected
         )
 
         is MultipleSelectionQuestion -> MultipleSelectionContent(
             question = question,
             selectedAnswerIndices = (selectedAnswer as? Set<*>)?.filterIsInstance<Int>()?.toSet(),
+            showAnswers = showAnswers,
             onAnswerSelected = onAnswerSelected
         )
 
         is OpenEndedQuestion -> OpenEndedContent(
+            question = question,
             selectedAnswer = selectedAnswer as? String,
+            showAnswers = showAnswers,
             onAnswerSelected = onAnswerSelected
         )
     }
@@ -206,19 +244,40 @@ private fun NavigationButtons(
 }
 
 @Composable
-private fun FinishScreen(onRestart: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.quiz_finished),
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRestart) {
-            Text(stringResource(R.string.restart_quiz))
+private fun FinishScreen(uiState: QuizUiState) {
+    val quiz by uiState.quizFlow.collectAsState()
+    val questions = quiz?.questions
+    val answers by uiState.answersFlow.collectAsState()
+
+    if (questions != null) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = stringResource(R.string.quiz_finished),
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyColumn {
+                items(questions) { question ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp)
+                    ) {
+                        QuestionHeader(question = question)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        QuestionContent(
+                            question = question,
+                            selectedAnswer = answers[question.id],
+                            showAnswers = true,
+                            onAnswerSelected = {
+                                // do nothing
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

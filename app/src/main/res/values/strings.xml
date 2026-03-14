@@ -6,13 +6,15 @@
     <string name="true_label">True</string>
     <string name="false_label">False</string>
     <string name="question_type_not_implemented">Question type is not implemented</string>
-    <string name="quiz_app_challenge">Quiz App Challenge</string>
+    <string name="available_quizzes">Available Quizzes</string>
     <string name="no_valid_quiz">No valid quiz</string>
     <string name="quiz_finished">Quiz Finished!</string>
     <string name="restart_quiz">Restart Quiz</string>
     <string name="navigate_to_quiz">Navigate to Quiz</string>
     <string name="no_quizzes_found">No Quizzes Found!</string>
-    <string name="more_items_available">More items available</string>
     <string name="open_ended_hint">Type your answer here</string>
     <string name="open_ended_label">Answer</string>
+    <string name="main_menu">Main Menu</string>
+    <string name="correct_exclamation">Correct!</string>
+    <string name="correct_answer_string">Correct answer: %1$s</string>
 </resources>

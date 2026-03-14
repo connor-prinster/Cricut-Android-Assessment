@@ -31,7 +31,7 @@ fun MainNavHost(navController: NavHostController) {
         ) { backstackEntry ->
             val quizId = backstackEntry.arguments?.getInt(NAV_ARG_QUIZ_ID)
 
-            QuizScreen(quizId = quizId)
+            QuizScreen(navController = navController, quizId = quizId)
         }
     }
 }

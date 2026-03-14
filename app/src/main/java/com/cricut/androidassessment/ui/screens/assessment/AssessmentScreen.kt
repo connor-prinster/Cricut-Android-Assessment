@@ -1,5 +1,6 @@
 package com.cricut.androidassessment.ui.screens.assessment
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +55,7 @@ private fun AssessmentScreenContent(uiState: AssessmentUiState, onNav: (String) 
             .padding(24.dp)
     ) {
         Text(
-            text = stringResource(R.string.quiz_app_challenge),
+            text = stringResource(R.string.available_quizzes),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -86,6 +86,11 @@ private fun QuizRow(quiz: Quiz, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(
+                enabled = true,
+                onClickLabel = stringResource(R.string.navigate_to_quiz),
+                onClick = onClick
+            )
     ) {
         Text(
             text = quiz.title,
@@ -93,12 +98,10 @@ private fun QuizRow(quiz: Quiz, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = onClick) {
             Icon(
                 painter = painterResource(R.drawable.arrow_forward),
-                contentDescription = stringResource(R.string.navigate_to_quiz)
+                contentDescription = null
             )
-        }
     }
 }
 
