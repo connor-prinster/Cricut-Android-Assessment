@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -80,8 +81,7 @@ fun MultipleChoiceContent(
             state = listState,
             modifier = Modifier.selectableGroup()
         ) {
-            items(question.options) { option ->
-                val index = question.options.indexOf(option)
+            itemsIndexed(question.options) { index, option ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
