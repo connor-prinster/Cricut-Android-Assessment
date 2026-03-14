@@ -16,5 +16,5 @@
     <string name="open_ended_label">Answer</string>
     <string name="main_menu">Main Menu</string>
     <string name="correct_exclamation">Correct!</string>
-    <string name="correct_answer_string">Correct answer: %s</string>
+    <string name="correct_answer_string">Correct answer: %1$s</string>
 </resources>
