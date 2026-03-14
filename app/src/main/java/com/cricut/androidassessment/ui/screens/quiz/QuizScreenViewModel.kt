@@ -87,6 +87,7 @@ class QuizScreenViewModel @Inject constructor(
         viewModelScope.launch {
             quizIdFlow.collect { quizId ->
                 if (quizId != null) {
+                    quizFlow.value = null
                     isLoadingFlow.value = true
                     errorFlow.value = null
                     try {
