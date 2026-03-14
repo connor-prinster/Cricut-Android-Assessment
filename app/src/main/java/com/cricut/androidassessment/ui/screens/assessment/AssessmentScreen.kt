@@ -85,7 +85,12 @@ private fun AssessmentScreenContent(uiState: AssessmentUiState, onNav: (String) 
 private fun QuizRow(quiz: Quiz, onClick: () -> Unit) {
     Row(
         modifier = Modifier
-            .fillMaxWidth().clickable(enabled = true, onClick = onClick)
+            .fillMaxWidth()
+            .clickable(
+                enabled = true,
+                onClickLabel = stringResource(R.string.navigate_to_quiz),
+                onClick = onClick
+            )
     ) {
         Text(
             text = quiz.title,
@@ -95,7 +100,7 @@ private fun QuizRow(quiz: Quiz, onClick: () -> Unit) {
         Spacer(modifier = Modifier.weight(1f))
             Icon(
                 painter = painterResource(R.drawable.arrow_forward),
-                contentDescription = stringResource(R.string.navigate_to_quiz)
+                contentDescription = null
             )
     }
 }
