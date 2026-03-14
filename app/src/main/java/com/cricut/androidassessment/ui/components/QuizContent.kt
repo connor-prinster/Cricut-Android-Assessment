@@ -211,7 +211,11 @@ fun OpenEndedContent(
         if (showAnswers) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = if (isCorrect) "Correct!" else "Correct answer: ${question.correctAnswer}",
+                text = if (isCorrect) {
+                    stringResource(R.string.correct_exclamation)
+                } else {
+                    stringResource(R.string.correct_answer_string, question.correctAnswer)
+                },
                 color = if (isCorrect) CorrectGreen else IncorrectRed,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -332,10 +336,23 @@ private fun PreviewOpenEndedContent() {
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewOpenEndedContentCorrectAnswer() {
+private fun PreviewOpenEndedContentIncorrectAnswer() {
     AndroidAssessmentTheme {
         OpenEndedContent(
             question = OpenEndedQuestion(1, "Question", "Answer"),
+            selectedAnswer = "This is a correct answer",
+            showAnswers = true,
+            onAnswerSelected = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewOpenEndedContentCorrectAnswer() {
+    AndroidAssessmentTheme {
+        OpenEndedContent(
+            question = OpenEndedQuestion(1, "Question", "This is a correct answer"),
             selectedAnswer = "This is a correct answer",
             showAnswers = true,
             onAnswerSelected = {}
