@@ -98,7 +98,8 @@ class QuizScreenViewModel @Inject constructor(
                             errorFlow.value = context.getString(R.string.quiz_not_found)
                         }
                     } catch (e: Exception) {
-                        errorFlow.value = e.message ?: context.getString(R.string.unknown_error_occurred)
+                        Log.e(LOGGING_TAG, "Failed to load quiz with id $quizId", e)
+                        errorFlow.value = context.getString(R.string.unknown_error_occurred)
                     } finally {
                         isLoadingFlow.value = false
                     }
