@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -128,6 +129,9 @@ private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
     val selectedAnswer = answers[currentQuestion.id]
 
     val scrollState = rememberScrollState()
+    LaunchedEffect(currentQuestion.id) {
+        scrollState.scrollTo(0)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
