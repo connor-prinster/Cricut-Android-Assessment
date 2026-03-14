@@ -10,10 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -132,12 +133,26 @@ private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
     LaunchedEffect(currentQuestion.id) {
         scrollState.scrollTo(0)
     }
+
+    val totalQuestions = quiz.questions.size
+    val progress = (currentQuestionIndex + 1).toFloat() / totalQuestions
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
-        QuestionHeader(question = currentQuestion)
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+        )
+        QuestionHeader(
+            question = currentQuestion,
+            index = currentQuestionIndex + 1,
+            total = totalQuestions
+        )
         Spacer(modifier = Modifier.height(24.dp))
         QuestionContent(
             question = currentQuestion,
@@ -159,10 +174,10 @@ private fun NoValidQuiz() {
 }
 
 @Composable
-private fun QuestionHeader(question: QuizQuestion) {
+private fun QuestionHeader(question: QuizQuestion, index: Int, total: Int) {
     Column {
         Text(
-            text = "Question ${question.id}",
+            text = stringResource(R.string.question_x_of_y, index, total),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.secondary
         )
@@ -259,13 +274,17 @@ private fun FinishScreen(uiState: QuizUiState) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn {
-                items(questions) { question ->
+                itemsIndexed(questions) { index, question ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 24.dp)
                     ) {
-                        QuestionHeader(question = question)
+                        QuestionHeader(
+                            question = question,
+                            index = index + 1,
+                            total = questions.size
+                        )
                         Spacer(modifier = Modifier.height(24.dp))
                         QuestionContent(
                             question = question,
