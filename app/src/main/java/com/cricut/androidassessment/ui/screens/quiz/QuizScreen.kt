@@ -50,12 +50,13 @@ fun QuizScreen(
     val quiz = nullableQuiz
     val isFirst by uiState.isFirstQuestionFlow.collectAsState()
     val isLast by uiState.isLastQuestionFlow.collectAsState()
+    val isFinished by uiState.isFinishedFlow.collectAsState()
 
     val nextEnabled by uiState.isNextEnabledFlow.collectAsState()
 
     PaddedScaffold(
         bottomBar = {
-            if (quiz != null) {
+            if (quiz != null && !isFinished) {
                 NavigationButtons(
                     isFirst = isFirst,
                     isLast = isLast,
