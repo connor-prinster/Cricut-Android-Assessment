@@ -40,6 +40,7 @@ fun QuizScreen(
     viewModel: QuizScreenViewModel = hiltViewModel(),
     quizId: Int?,
 ) {
+    // use remember so we don't recreate a uiState over and over again if no quizId changes
     val uiState = remember(quizId) { viewModel.uiState(quizId) }
     Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
         Column(modifier = Modifier.padding(padding)) {
@@ -51,12 +52,15 @@ fun QuizScreen(
 @Composable
 private fun QuizScreenContent(uiState: QuizUiState) {
     val nullableQuiz by uiState.quizFlow.collectAsState()
+    // as it's delegated, quiz can be null
     val quiz = nullableQuiz
     if (quiz != null) {
         val isFinished by uiState.isFinishedFlow.collectAsState()
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+        ) {
             Text(
                 text = quiz.title,
                 style = MaterialTheme.typography.headlineLarge,
@@ -66,36 +70,43 @@ private fun QuizScreenContent(uiState: QuizUiState) {
             if (isFinished) {
                 FinishScreen { uiState.restartQuiz() }
             } else {
-                val currentQuestionIndex by uiState.currentQuestionIndexFlow.collectAsState()
-                val currentQuestion = quiz.questions[currentQuestionIndex]
-
-                val answers by uiState.answersFlow.collectAsState()
-                val selectedAnswer = answers[currentQuestion.id]
-
-                val isFirst by uiState.isFirstQuestionFlow.collectAsState()
-                val isLast by uiState.isLastQuestionFlow.collectAsState()
-
-                val nextEnabled by uiState.isNextEnabledFlow.collectAsState()
-
-                QuestionHeader(question = currentQuestion)
-                Spacer(modifier = Modifier.height(24.dp))
-                QuestionContent(
-                    question = currentQuestion,
-                    selectedAnswer = selectedAnswer,
-                    onAnswerSelected = { uiState.onAnswerSelected(currentQuestion.id, it) }
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                NavigationButtons(
-                    isFirst = isFirst,
-                    isLast = isLast,
-                    onNext = { uiState.navigateNext() },
-                    onBack = { uiState.navigateBack() },
-                    nextEnabled = nextEnabled
-                )
+                QuizInProgress(uiState = uiState, quiz = quiz)
             }
         }
     } else {
         NoValidQuiz()
+    }
+}
+
+@Composable
+private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
+    val currentQuestionIndex by uiState.currentQuestionIndexFlow.collectAsState()
+    val currentQuestion = quiz.questions[currentQuestionIndex]
+
+    val answers by uiState.answersFlow.collectAsState()
+    val selectedAnswer = answers[currentQuestion.id]
+
+    val isFirst by uiState.isFirstQuestionFlow.collectAsState()
+    val isLast by uiState.isLastQuestionFlow.collectAsState()
+
+    val nextEnabled by uiState.isNextEnabledFlow.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        QuestionHeader(question = currentQuestion)
+        Spacer(modifier = Modifier.height(24.dp))
+        QuestionContent(
+            question = currentQuestion,
+            selectedAnswer = selectedAnswer,
+            onAnswerSelected = { uiState.onAnswerSelected(currentQuestion.id, it) }
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        NavigationButtons(
+            isFirst = isFirst,
+            isLast = isLast,
+            onNext = { uiState.navigateNext() },
+            onBack = { uiState.navigateBack() },
+            nextEnabled = nextEnabled
+        )
     }
 }
 

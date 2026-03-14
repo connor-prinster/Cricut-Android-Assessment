@@ -139,7 +139,8 @@ class QuizScreenViewModel @Inject constructor(
     fun uiState(questionId: Int?): QuizUiState {
         val previousQuizId = quizIdFlow.value
         if (previousQuizId != questionId) {
-            // New quiz loaded: reset per-quiz state so indices/answers don't leak across quizzes.
+            // If a new quizId is passed in, reset the state. As there isn't a key in the ViewModel creation,
+            // there is a chance that the ViewModel might be reused for a different quiz.
             restartQuiz()
             quizIdFlow.value = questionId
         }

@@ -23,7 +23,7 @@ import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizScreenViewModelTest {
-    private val repository: QuizRepository = mock()
+    private val mockRepository: QuizRepository = mock()
     private lateinit var viewModel: QuizScreenViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -39,8 +39,8 @@ class QuizScreenViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        whenever(repository.getQuizById(1)).doReturn(testQuiz)
-        viewModel = QuizScreenViewModel(repository)
+        whenever(mockRepository.getQuizById(1)).doReturn(testQuiz)
+        viewModel = QuizScreenViewModel(mockRepository)
     }
 
     @After
@@ -56,83 +56,66 @@ class QuizScreenViewModelTest {
     }
 
     @Test
-    fun `onAnswerSelected should update answersFlow and isNextEnabledFlow`() = runTest(testDispatcher) {
-        viewModel.uiState(1)
-        advanceUntilIdle()
-
-        viewModel.onAnswerSelected(1, true)
-        advanceUntilIdle()
-
-        assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
-        assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
-    }
-
-    @Test
-    fun `navigateNext should increment question index`() = runTest {
-        val testDispatcher = StandardTestDispatcher()
-        Dispatchers.setMain(testDispatcher)
-        try {
-            viewModel.uiState(1)
-            advanceUntilIdle()
-
-            viewModel.navigateNext()
-            advanceUntilIdle()
-
-            assertEquals(1, viewModel.uiState(1).currentQuestionIndexFlow.value)
-            assertFalse(viewModel.uiState(1).isFinishedFlow.value)
-        } finally {
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `navigateNext on last question should set isFinished`() = runTest {
-        try {
-            viewModel.uiState(1)
-            advanceUntilIdle()
-
-            viewModel.navigateNext()
-            viewModel.navigateNext()
-            advanceUntilIdle()
-
-            assertTrue(viewModel.uiState(1).isFinishedFlow.value)
-        } finally {
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `isLastQuestionFlow should be true on last question`() = runTest {
-        try {
-            viewModel.uiState(1)
-            advanceUntilIdle()
-
-            viewModel.navigateNext()
-            advanceUntilIdle()
-
-            assertTrue(viewModel.uiState(1).isLastQuestionFlow.value)
-        } finally {
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `restartQuiz should reset state`() = runTest {
-        try {
+    fun `onAnswerSelected should update answersFlow and isNextEnabledFlow`() =
+        runTest(testDispatcher) {
             viewModel.uiState(1)
             advanceUntilIdle()
 
             viewModel.onAnswerSelected(1, true)
-            viewModel.navigateNext()
-            viewModel.restartQuiz()
             advanceUntilIdle()
 
-            val uiState = viewModel.uiState(1)
-            assertEquals(0, uiState.currentQuestionIndexFlow.value)
-            assertTrue(uiState.answersFlow.value.isEmpty())
-            assertFalse(uiState.isFinishedFlow.value)
-        } finally {
-            Dispatchers.resetMain()
+            assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
+            assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
         }
+
+    @Test
+    fun `navigateNext should increment question index`() = runTest {
+        viewModel.uiState(1)
+        advanceUntilIdle()
+
+        viewModel.navigateNext()
+        advanceUntilIdle()
+
+        assertEquals(1, viewModel.uiState(1).currentQuestionIndexFlow.value)
+        assertFalse(viewModel.uiState(1).isFinishedFlow.value)
+    }
+
+    @Test
+    fun `navigateNext on last question should set isFinished`() = runTest {
+        viewModel.uiState(1)
+        advanceUntilIdle()
+
+        viewModel.navigateNext()
+        viewModel.navigateNext()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState(1).isFinishedFlow.value)
+    }
+
+    @Test
+    fun `isLastQuestionFlow should be true on last question`() = runTest {
+        viewModel.uiState(1)
+        advanceUntilIdle()
+
+        viewModel.navigateNext()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState(1).isLastQuestionFlow.value)
+    }
+
+    @Test
+    fun `restartQuiz should reset state`() = runTest {
+        viewModel.uiState(1)
+        advanceUntilIdle()
+
+        viewModel.onAnswerSelected(1, true)
+        viewModel.navigateNext()
+        viewModel.restartQuiz()
+        advanceUntilIdle()
+
+        val uiState = viewModel.uiState(1)
+        assertEquals(0, uiState.currentQuestionIndexFlow.value)
+        assertTrue(uiState.answersFlow.value.isEmpty())
+        assertFalse(uiState.isFinishedFlow.value)
     }
 }
