@@ -26,7 +26,7 @@ import com.cricut.androidassessment.R
 
 @Composable
 fun ListAnimatedVisibility(modifier: Modifier, listState: LazyListState) {
-    val canScrollForward by remember { derivedStateOf { listState.canScrollForward } }
+    val canScrollForward by remember(listState) { derivedStateOf { listState.canScrollForward } }
     AnimatedVisibility(
         visible = canScrollForward,
         enter = fadeIn(),
