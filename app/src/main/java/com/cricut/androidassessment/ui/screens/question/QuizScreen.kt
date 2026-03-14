@@ -1,4 +1,4 @@
-package com.cricut.androidassessment.ui.screens
+package com.cricut.androidassessment.ui.screens.question
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,82 +15,109 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.cricut.androidassessment.R
 import com.cricut.androidassessment.model.MultipleChoiceQuestion
-import com.cricut.androidassessment.model.MultipleSelectionQuestion
-import com.cricut.androidassessment.model.OpenEndedQuestion
+import com.cricut.androidassessment.model.Quiz
 import com.cricut.androidassessment.model.QuizQuestion
 import com.cricut.androidassessment.model.TrueFalseQuestion
-import com.cricut.androidassessment.ui.AssessmentViewModel
-import com.cricut.androidassessment.ui.theme.AndroidAssessmentTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
-fun AssessmentScreen(
-    modifier: Modifier = Modifier,
-    viewModel: AssessmentViewModel = viewModel()
+fun QuizScreen(
+    viewModel: QuizScreenViewModel = hiltViewModel(),
+    quizId: Int?,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = "Quiz App Challenge",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
-
-        if (uiState.isFinished) {
-            FinishScreen(onRestart = viewModel::restartQuiz)
-        } else {
-            uiState.currentQuestion?.let { question ->
-                QuestionHeader(question = question)
-                Spacer(modifier = Modifier.height(24.dp))
-                QuestionContent(
-                    question = question,
-                    selectedAnswer = uiState.answers[question.id],
-                    onAnswerSelected = { viewModel.onAnswerSelected(question.id, it) }
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                NavigationButtons(
-                    isFirst = uiState.isFirstQuestion,
-                    isLast = uiState.isLastQuestion,
-                    onNext = viewModel::navigateNext,
-                    onBack = viewModel::navigateBack,
-                    nextEnabled = uiState.isNextEnabled
-                )
-            }
+    // use remember so we don't recreate a uiState over and over again if no quizId changes
+    val uiState = remember(quizId) { viewModel.uiState(quizId) }
+    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            QuizScreenContent(uiState = uiState)
         }
     }
 }
 
 @Composable
-private fun FinishScreen(onRestart: () -> Unit) {
+private fun QuizScreenContent(uiState: QuizUiState) {
+    val nullableQuiz by uiState.quizFlow.collectAsState()
+    // as it's delegated, quiz can be null
+    val quiz = nullableQuiz
+    if (quiz != null) {
+        val isFinished by uiState.isFinishedFlow.collectAsState()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+        ) {
+            Text(
+                text = quiz.title,
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+            if (isFinished) {
+                FinishScreen { uiState.restartQuiz() }
+            } else {
+                QuizInProgress(uiState = uiState, quiz = quiz)
+            }
+        }
+    } else {
+        NoValidQuiz()
+    }
+}
+
+@Composable
+private fun QuizInProgress(uiState: QuizUiState, quiz: Quiz) {
+    val currentQuestionIndex by uiState.currentQuestionIndexFlow.collectAsState()
+    val currentQuestion = quiz.questions[currentQuestionIndex]
+
+    val answers by uiState.answersFlow.collectAsState()
+    val selectedAnswer = answers[currentQuestion.id]
+
+    val isFirst by uiState.isFirstQuestionFlow.collectAsState()
+    val isLast by uiState.isLastQuestionFlow.collectAsState()
+
+    val nextEnabled by uiState.isNextEnabledFlow.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        QuestionHeader(question = currentQuestion)
+        Spacer(modifier = Modifier.height(24.dp))
+        QuestionContent(
+            question = currentQuestion,
+            selectedAnswer = selectedAnswer,
+            onAnswerSelected = { uiState.onAnswerSelected(currentQuestion.id, it) }
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        NavigationButtons(
+            isFirst = isFirst,
+            isLast = isLast,
+            onNext = { uiState.navigateNext() },
+            onBack = { uiState.navigateBack() },
+            nextEnabled = nextEnabled
+        )
+    }
+}
+
+@Composable
+private fun NoValidQuiz() {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Quiz Finished!",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRestart) {
-            Text("Restart Quiz")
-        }
+        Text(stringResource(R.string.no_valid_quiz))
     }
 }
 
@@ -121,14 +148,15 @@ private fun QuestionContent(
             selectedAnswer = selectedAnswer as? Boolean,
             onAnswerSelected = onAnswerSelected
         )
+
         is MultipleChoiceQuestion -> MultipleChoiceContent(
             question = question,
             selectedAnswerIndex = selectedAnswer as? Int,
             onAnswerSelected = onAnswerSelected
         )
+
         else -> {
-            // Optional: Implement other question types or a placeholder
-            Text("Question type not implemented yet")
+            Text(stringResource(R.string.question_type_not_implemented))
         }
     }
 }
@@ -140,7 +168,7 @@ private fun TrueFalseContent(
 ) {
     Column(modifier = Modifier.selectableGroup()) {
         listOf(true, false).forEach { answer ->
-            val label = if (answer) "True" else "False"
+            val label = stringResource(if (answer) R.string.true_label else R.string.false_label)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -215,25 +243,55 @@ private fun NavigationButtons(
     ) {
         if (!isFirst) {
             OutlinedButton(onClick = onBack) {
-                Text("Back")
+                Text(stringResource(R.string.back))
             }
         } else {
-            Spacer(modifier = Modifier.width(1.dp)) // Maintain space
+            Spacer(modifier = Modifier.width(1.dp))
         }
 
         Button(
             onClick = onNext,
             enabled = nextEnabled
         ) {
-            Text(if (isLast) "Finish" else "Next")
+            Text(stringResource(if (isLast) R.string.finish else R.string.next))
+        }
+    }
+}
+
+@Composable
+private fun FinishScreen(onRestart: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.quiz_finished),
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRestart) {
+            Text(stringResource(R.string.restart_quiz))
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewAssessmentScreen() {
-    AndroidAssessmentTheme {
-        AssessmentScreen()
+private fun PreviewQuizScreenEmpty() {
+    MaterialTheme {
+        QuizScreenContent(uiState = QuizUiState.EMPTY)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewQuizScreenPopulated() {
+    MaterialTheme {
+        QuizScreenContent(
+            uiState = QuizUiState.EMPTY.copy(
+                quizFlow = MutableStateFlow(Quiz.generateTest())
+            )
+        )
     }
 }

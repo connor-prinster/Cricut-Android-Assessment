@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">AndroidAssessment</string>
+    <string name="back">Back</string>
+    <string name="finish">Finish</string>
+    <string name="next">Next</string>
+    <string name="true_label">True</string>
+    <string name="false_label">False</string>
+    <string name="question_type_not_implemented">Question type is not implemented</string>
+    <string name="quiz_app_challenge">Quiz App Challenge</string>
+    <string name="no_valid_quiz">No valid quiz</string>
+    <string name="quiz_finished">Quiz Finished!</string>
+    <string name="restart_quiz">Restart Quiz</string>
+    <string name="navigate_to_quiz">Navigate to Quiz</string>
+    <string name="no_quizzes_found">No Quizzes Found!</string>
 </resources>
