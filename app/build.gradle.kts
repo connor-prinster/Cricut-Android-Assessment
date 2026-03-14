@@ -42,7 +42,9 @@ android {
 
     testOptions {
         unitTests.all {
-            it.jvmArgs("-XX:+EnableDynamicAgentLoading")
+            if (JavaVersion.current() == JavaVersion.VERSION_11) {
+                it.jvmArgs("-XX:+EnableDynamicAgentLoading")
+            }
         }
     }
 }
