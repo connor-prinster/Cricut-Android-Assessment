@@ -35,7 +35,7 @@ class QuizRepository @Inject constructor() {
     private val questionFour = OpenEndedQuestion(
         id = 4,
         questionText = "What is Jetpack Compose used for in Android development?",
-        correctAnswer = ""
+        correctAnswer = "To build declarative user interfaces in Android"
     )
 
     private val questions: List<QuizQuestion> = listOf(
