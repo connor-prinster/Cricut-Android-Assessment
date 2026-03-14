@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,8 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.cricut.androidassessment.R
-import com.cricut.androidassessment.model.Quiz
 import com.cricut.androidassessment.enums.Routes
+import com.cricut.androidassessment.model.Quiz
+import com.cricut.androidassessment.ui.components.PaddedScaffold
 import com.cricut.androidassessment.ui.theme.AndroidAssessmentTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -37,11 +37,10 @@ fun AssessmentScreen(
     viewModel: AssessmentViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            AssessmentScreenContent(uiState = uiState) { route ->
-                navController.navigate(route)
-            }
+
+    PaddedScaffold {
+        AssessmentScreenContent(uiState = uiState) { route ->
+            navController.navigate(route)
         }
     }
 }

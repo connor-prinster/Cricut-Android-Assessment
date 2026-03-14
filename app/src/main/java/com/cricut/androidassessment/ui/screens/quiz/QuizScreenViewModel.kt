@@ -1,4 +1,4 @@
-package com.cricut.androidassessment.ui.screens.question
+package com.cricut.androidassessment.ui.screens.quiz
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
