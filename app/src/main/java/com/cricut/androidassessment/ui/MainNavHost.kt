@@ -1,6 +1,5 @@
 package com.cricut.androidassessment.ui
 
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,7 +9,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.cricut.androidassessment.ext.stripCurlies
 import com.cricut.androidassessment.enums.NavigationConstants.NAV_ARG_QUIZ_ID
 import com.cricut.androidassessment.enums.Routes
 import com.cricut.androidassessment.ui.screens.assessment.AssessmentScreen
@@ -29,12 +27,9 @@ fun MainNavHost(navController: NavHostController) {
 
         composable(
             route = Routes.QUIZ,
-            arguments = listOf(navArgument(NAV_ARG_QUIZ_ID) { type = NavType.StringType })
+            arguments = listOf(navArgument(NAV_ARG_QUIZ_ID) { type = NavType.IntType })
         ) { backstackEntry ->
-            val quizId = backstackEntry.arguments?.getString(NAV_ARG_QUIZ_ID)?.stripCurlies()
-                ?.let { encodedId ->
-                    Uri.decode(encodedId)
-                }?.toIntOrNull()
+            val quizId = backstackEntry.arguments?.getInt(NAV_ARG_QUIZ_ID)
 
             QuizScreen(quizId = quizId)
         }

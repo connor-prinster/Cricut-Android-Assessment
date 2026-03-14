@@ -1,6 +1,6 @@
 package com.cricut.androidassessment.model
 
-class Quiz(
+data class Quiz(
     val id: Int,
     val title: String,
     val questions: List<QuizQuestion>

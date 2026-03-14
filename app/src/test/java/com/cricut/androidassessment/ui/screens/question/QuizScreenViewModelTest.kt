@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -24,8 +23,6 @@ import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizScreenViewModelTest {
-
-    private val testDispatcher = StandardTestDispatcher()
     private val repository: QuizRepository = mock()
     private lateinit var viewModel: QuizScreenViewModel
 
@@ -40,7 +37,6 @@ class QuizScreenViewModelTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
         whenever(repository.getQuizById(1)).doReturn(testQuiz)
         viewModel = QuizScreenViewModel(repository)
     }
@@ -52,72 +48,104 @@ class QuizScreenViewModelTest {
 
     @Test
     fun `uiState should set quizId and fetch quiz`() = runTest {
-        viewModel.uiState(1)
-        advanceUntilIdle()
+        val testDispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
 
-        assertEquals(testQuiz, viewModel.uiState(1).quizFlow.value)
+        try {
+            viewModel.uiState(1)
+            advanceUntilIdle()
+            assertEquals(testQuiz, viewModel.uiState(1).quizFlow.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
+
     }
 
     @Test
     fun `onAnswerSelected should update answersFlow and isNextEnabledFlow`() = runTest {
-        viewModel.uiState(1)
-        advanceUntilIdle()
+        val testDispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
 
-        viewModel.onAnswerSelected(1, true)
-        advanceUntilIdle()
+        try {
+            viewModel.uiState(1)
+            advanceUntilIdle()
 
-        assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
-        assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
+            viewModel.onAnswerSelected(1, true)
+            advanceUntilIdle()
+
+            assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
+            assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Test
     fun `navigateNext should increment question index`() = runTest {
-        viewModel.uiState(1)
-        advanceUntilIdle()
+        val testDispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        try {
+            viewModel.uiState(1)
+            advanceUntilIdle()
 
-        viewModel.navigateNext()
-        advanceUntilIdle()
+            viewModel.navigateNext()
+            advanceUntilIdle()
 
-        assertEquals(1, viewModel.uiState(1).currentQuestionIndexFlow.value)
-        assertFalse(viewModel.uiState(1).isFinishedFlow.value)
+            assertEquals(1, viewModel.uiState(1).currentQuestionIndexFlow.value)
+            assertFalse(viewModel.uiState(1).isFinishedFlow.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Test
     fun `navigateNext on last question should set isFinished`() = runTest {
-        viewModel.uiState(1)
-        advanceUntilIdle()
+        try {
+            viewModel.uiState(1)
+            advanceUntilIdle()
 
-        viewModel.navigateNext()
-        viewModel.navigateNext()
-        advanceUntilIdle()
+            viewModel.navigateNext()
+            viewModel.navigateNext()
+            advanceUntilIdle()
 
-        assertTrue(viewModel.uiState(1).isFinishedFlow.value)
+            assertTrue(viewModel.uiState(1).isFinishedFlow.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Test
     fun `isLastQuestionFlow should be true on last question`() = runTest {
-        viewModel.uiState(1)
-        advanceUntilIdle()
+        try {
+            viewModel.uiState(1)
+            advanceUntilIdle()
 
-        viewModel.navigateNext()
-        advanceUntilIdle()
+            viewModel.navigateNext()
+            advanceUntilIdle()
 
-        assertTrue(viewModel.uiState(1).isLastQuestionFlow.value)
+            assertTrue(viewModel.uiState(1).isLastQuestionFlow.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Test
     fun `restartQuiz should reset state`() = runTest {
-        viewModel.uiState(1)
-        advanceUntilIdle()
+        try {
+            viewModel.uiState(1)
+            advanceUntilIdle()
 
-        viewModel.onAnswerSelected(1, true)
-        viewModel.navigateNext()
-        viewModel.restartQuiz()
-        advanceUntilIdle()
+            viewModel.onAnswerSelected(1, true)
+            viewModel.navigateNext()
+            viewModel.restartQuiz()
+            advanceUntilIdle()
 
-        val uiState = viewModel.uiState(1)
-        assertEquals(0, uiState.currentQuestionIndexFlow.value)
-        assertTrue(uiState.answersFlow.value.isEmpty())
-        assertFalse(uiState.isFinishedFlow.value)
+            val uiState = viewModel.uiState(1)
+            assertEquals(0, uiState.currentQuestionIndexFlow.value)
+            assertTrue(uiState.answersFlow.value.isEmpty())
+            assertFalse(uiState.isFinishedFlow.value)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }

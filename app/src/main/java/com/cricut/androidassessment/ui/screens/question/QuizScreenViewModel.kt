@@ -93,16 +93,34 @@ class QuizScreenViewModel @Inject constructor(
     fun onAnswerSelected(questionId: Int, answer: Any?) {
         if (answer == null) {
             Log.e(LOGGING_TAG, "Answer cannot be null")
+            return
         }
 
         answersFlow.value += (questionId to answer)
     }
 
     fun navigateNext() {
-        if (currentQuestionIndexFlow.value < (quizFlow.value?.questions?.size ?: -1) - 1) {
-            currentQuestionIndexFlow.value++
-        } else {
+        val quiz = quizFlow.value
+        val questions = quiz?.questions
+
+        if(quiz == null) {
+            Log.e(LOGGING_TAG, "navigateNext is called with null quiz")
+            return
+        }
+        if(questions.isNullOrEmpty()) {
+            Log.e(LOGGING_TAG, "navigateNext is called with empty questions")
+            return
+        }
+
+        val lastIndex = questions.size - 1
+        val currentIndex = currentQuestionIndexFlow.value
+
+        if(currentIndex < lastIndex) {
+            currentQuestionIndexFlow.value = currentIndex + 1
+        } else if (currentIndex == lastIndex) {
             isFinishedFlow.value = true
+        } else {
+            Log.e(LOGGING_TAG, "Invalid current question index: $currentIndex")
         }
     }
 
