@@ -25,6 +25,7 @@ import org.mockito.kotlin.whenever
 class QuizScreenViewModelTest {
     private val repository: QuizRepository = mock()
     private lateinit var viewModel: QuizScreenViewModel
+    private val testDispatcher = StandardTestDispatcher()
 
     private val testQuiz = Quiz(
         id = 1,
@@ -37,6 +38,7 @@ class QuizScreenViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         whenever(repository.getQuizById(1)).doReturn(testQuiz)
         viewModel = QuizScreenViewModel(repository)
     }
@@ -47,37 +49,22 @@ class QuizScreenViewModelTest {
     }
 
     @Test
-    fun `uiState should set quizId and fetch quiz`() = runTest {
-        val testDispatcher = StandardTestDispatcher()
-        Dispatchers.setMain(testDispatcher)
-
-        try {
-            viewModel.uiState(1)
-            advanceUntilIdle()
-            assertEquals(testQuiz, viewModel.uiState(1).quizFlow.value)
-        } finally {
-            Dispatchers.resetMain()
-        }
-
+    fun `uiState should set quizId and fetch quiz`() = runTest(testDispatcher) {
+        viewModel.uiState(1)
+        advanceUntilIdle()
+        assertEquals(testQuiz, viewModel.uiState(1).quizFlow.value)
     }
 
     @Test
-    fun `onAnswerSelected should update answersFlow and isNextEnabledFlow`() = runTest {
-        val testDispatcher = StandardTestDispatcher()
-        Dispatchers.setMain(testDispatcher)
+    fun `onAnswerSelected should update answersFlow and isNextEnabledFlow`() = runTest(testDispatcher) {
+        viewModel.uiState(1)
+        advanceUntilIdle()
 
-        try {
-            viewModel.uiState(1)
-            advanceUntilIdle()
+        viewModel.onAnswerSelected(1, true)
+        advanceUntilIdle()
 
-            viewModel.onAnswerSelected(1, true)
-            advanceUntilIdle()
-
-            assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
-            assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
-        } finally {
-            Dispatchers.resetMain()
-        }
+        assertEquals(true, viewModel.uiState(1).answersFlow.value[1])
+        assertTrue(viewModel.uiState(1).isNextEnabledFlow.value)
     }
 
     @Test
