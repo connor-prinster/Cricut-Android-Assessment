@@ -39,6 +39,14 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests.all {
+            if (JavaVersion.current() == JavaVersion.VERSION_11) {
+                it.jvmArgs("-XX:+EnableDynamicAgentLoading")
+            }
+        }
+    }
 }
 
 kotlin {
