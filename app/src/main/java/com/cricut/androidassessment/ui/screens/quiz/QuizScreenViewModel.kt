@@ -103,11 +103,11 @@ class QuizScreenViewModel @Inject constructor(
         val quiz = quizFlow.value
         val questions = quiz?.questions
 
-        if(quiz == null) {
+        if (quiz == null) {
             Log.e(LOGGING_TAG, "navigateNext is called with null quiz")
             return
         }
-        if(questions.isNullOrEmpty()) {
+        if (questions.isNullOrEmpty()) {
             Log.e(LOGGING_TAG, "navigateNext is called with empty questions")
             return
         }
@@ -115,7 +115,7 @@ class QuizScreenViewModel @Inject constructor(
         val lastIndex = questions.size - 1
         val currentIndex = currentQuestionIndexFlow.value
 
-        if(currentIndex < lastIndex) {
+        if (currentIndex < lastIndex) {
             currentQuestionIndexFlow.value = currentIndex + 1
         } else if (currentIndex == lastIndex) {
             isFinishedFlow.value = true
